@@ -7,9 +7,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <termios.h>
+#include <unistd.h>
+
 #include <sys/ioctl.h>
 
 /** BEGIN vec.h **/
@@ -44,7 +45,7 @@
 
 #define vec_deinit(v)\
   ( free((v)->data),\
-    vec_init(v) ) 
+    vec_init(v) )
 
 
 #define vec_push(v, val)\
@@ -69,7 +70,7 @@
 #define vec_insert(v, idx, val)\
   ( vec_insert_(vec_unpack_(v), idx) ? -1 :\
     ((v)->data[idx] = (val), 0), (v)->length++, 0 )
-    
+
 
 #define vec_sort(v, fn)\
   qsort((v)->data, (v)->length, sizeof(*(v)->data), fn)
@@ -98,7 +99,7 @@
 #define vec_reserve(v, n)\
   vec_reserve_(vec_unpack_(v), n)
 
- 
+
 #define vec_compact(v)\
   vec_compact_(vec_unpack_(v))
 
@@ -171,20 +172,14 @@
         --(iter))
 
 
-
-int vec_expand_(char **data, int *length, int *capacity, int memsz);
-int vec_reserve_(char **data, int *length, int *capacity, int memsz, int n);
-int vec_reserve_po2_(char **data, int *length, int *capacity, int memsz,
-                     int n);
-int vec_compact_(char **data, int *length, int *capacity, int memsz);
-int vec_insert_(char **data, int *length, int *capacity, int memsz,
-                int idx);
-void vec_splice_(char **data, int *length, int *capacity, int memsz,
-                 int start, int count);
-void vec_swapsplice_(char **data, int *length, int *capacity, int memsz,
-                     int start, int count);
-void vec_swap_(char **data, int *length, int *capacity, int memsz,
-               int idx1, int idx2);
+int  vec_expand_(char** data, int* length, int* capacity, int memsz);
+int  vec_reserve_(char** data, int* length, int* capacity, int memsz, int n);
+int  vec_reserve_po2_(char** data, int* length, int* capacity, int memsz, int n);
+int  vec_compact_(char** data, int* length, int* capacity, int memsz);
+int  vec_insert_(char** data, int* length, int* capacity, int memsz, int idx);
+void vec_splice_(char** data, int* length, int* capacity, int memsz, int start, int count);
+void vec_swapsplice_(char** data, int* length, int* capacity, int memsz, int start, int count);
+void vec_swap_(char** data, int* length, int* capacity, int memsz, int idx1, int idx2);
 
 
 typedef vec_t(void*) vec_void_t;
@@ -194,108 +189,113 @@ typedef vec_t(char) vec_char_t;
 typedef vec_t(float) vec_float_t;
 typedef vec_t(double) vec_double_t;
 
-int vec_expand_(char **data, int *length, int *capacity, int memsz) {
-  if (*length + 1 > *capacity) {
-    void *ptr;
-    int n = (*capacity == 0) ? 1 : *capacity << 1;
-    ptr = realloc(*data, n * memsz);
-    if (ptr == NULL) return -1;
-    *data = (char*)ptr;
-    *capacity = n;
-  }
-  return 0;
-}
-
-
-int vec_reserve_(char **data, int *length, int *capacity, int memsz, int n) {
-  (void) length;
-  if (n > *capacity) {
-    void *ptr = realloc(*data, n * memsz);
-    if (ptr == NULL) return -1;
-    *data = (char*)ptr;
-    *capacity = n;
-  }
-  return 0;
-}
-
-
-int vec_reserve_po2_(
-  char **data, int *length, int *capacity, int memsz, int n
-) {
-  int n2 = 1;
-  if (n == 0) return 0;
-  while (n2 < n) n2 <<= 1;
-  return vec_reserve_(data, length, capacity, memsz, n2);
-}
-
-
-int vec_compact_(char **data, int *length, int *capacity, int memsz) {
-  if (*length == 0) {
-    free(*data);
-    *data = NULL;
-    *capacity = 0;
+int vec_expand_(char** data, int* length, int* capacity, int memsz)
+{
+    if (*length + 1 > *capacity)
+    {
+        void* ptr;
+        int   n = (*capacity == 0) ? 1 : *capacity << 1;
+        ptr     = realloc(*data, n * memsz);
+        if (ptr == NULL)
+            return -1;
+        *data     = (char*)ptr;
+        *capacity = n;
+    }
     return 0;
-  } else {
-    void *ptr;
-    int n = *length;
-    ptr = realloc(*data, n * memsz);
-    if (ptr == NULL) return -1;
-    *capacity = n;
-    *data = (char*)ptr;
-  }
-  return 0;
 }
 
 
-int vec_insert_(char **data, int *length, int *capacity, int memsz,
-                 int idx
-) {
-  int err = vec_expand_(data, length, capacity, memsz);
-  if (err) return err;
-  memmove(*data + (idx + 1) * memsz,
-          *data + idx * memsz,
-          (*length - idx) * memsz);
-  return 0;
+int vec_reserve_(char** data, int* length, int* capacity, int memsz, int n)
+{
+    (void)length;
+    if (n > *capacity)
+    {
+        void* ptr = realloc(*data, n * memsz);
+        if (ptr == NULL)
+            return -1;
+        *data     = (char*)ptr;
+        *capacity = n;
+    }
+    return 0;
 }
 
 
-void vec_splice_(char **data, int *length, int *capacity, int memsz,
-                 int start, int count
-) {
-  (void) capacity;
-  memmove(*data + start * memsz,
-          *data + (start + count) * memsz,
-          (*length - start - count) * memsz);
+int vec_reserve_po2_(char** data, int* length, int* capacity, int memsz, int n)
+{
+    int n2 = 1;
+    if (n == 0)
+        return 0;
+    while (n2 < n)
+        n2 <<= 1;
+    return vec_reserve_(data, length, capacity, memsz, n2);
 }
 
 
-void vec_swapsplice_(char **data, int *length, int *capacity, int memsz,
-                     int start, int count
-) {
-  (void) capacity;
-  memmove(*data + start * memsz,
-          *data + (*length - count) * memsz,
-          count * memsz);
+int vec_compact_(char** data, int* length, int* capacity, int memsz)
+{
+    if (*length == 0)
+    {
+        free(*data);
+        *data     = NULL;
+        *capacity = 0;
+        return 0;
+    }
+    else
+    {
+        void* ptr;
+        int   n = *length;
+        ptr     = realloc(*data, n * memsz);
+        if (ptr == NULL)
+            return -1;
+        *capacity = n;
+        *data     = (char*)ptr;
+    }
+    return 0;
 }
 
 
-void vec_swap_(char **data, int *length, int *capacity, int memsz,
-               int idx1, int idx2 
-) {
-  unsigned char *a, *b, tmp;
-  int count;
-  (void) length;
-  (void) capacity;
-  if (idx1 == idx2) return;
-  a = (unsigned char*) *data + idx1 * memsz;
-  b = (unsigned char*) *data + idx2 * memsz;
-  count = memsz;
-  while (count--) {
-    tmp = *a;
-    *a = *b;
-    *b = tmp;
-    a++, b++;
-  }
+int vec_insert_(char** data, int* length, int* capacity, int memsz, int idx)
+{
+    int err = vec_expand_(data, length, capacity, memsz);
+    if (err)
+        return err;
+    memmove(*data + (idx + 1) * memsz, *data + idx * memsz, (*length - idx) * memsz);
+    return 0;
+}
+
+
+void vec_splice_(char** data, int* length, int* capacity, int memsz, int start, int count)
+{
+    (void)capacity;
+    memmove(*data + start * memsz, *data + (start + count) * memsz, (*length - start - count) * memsz);
+}
+
+
+void vec_swapsplice_(char** data, int* length, int* capacity, int memsz, int start, int count)
+{
+    (void)capacity;
+    memmove(*data + start * memsz, *data + (*length - count) * memsz, count * memsz);
+}
+
+
+void vec_swap_(char** data, int* length, int* capacity, int memsz, int idx1, int idx2)
+{
+    unsigned char *a, *b, tmp;
+    int            count;
+    (void)length;
+    (void)capacity;
+    if (idx1 == idx2)
+        return;
+    a     = (unsigned char*)*data + idx1 * memsz;
+    b     = (unsigned char*)*data + idx2 * memsz;
+    count = memsz;
+    while (count--)
+    {
+        tmp = *a;
+        *a  = *b;
+        *b  = tmp;
+        a++, b++;
+    }
 }
 
 #endif
@@ -370,43 +370,44 @@ void vec_swap_(char **data, int *length, int *capacity, int memsz,
 
 typedef struct ui_box_t ui_box_t;
 
-typedef void (*ui_draw_func_t)(ui_box_t *b, char *out);
-typedef void (*ui_click_func_t)(ui_box_t *b, int x, int y);
-typedef void (*ui_hover_func_t)(ui_box_t *b, int x, int y, int down);
+typedef void (*ui_draw_func_t)(ui_box_t* b, char* out);
+typedef void (*ui_click_func_t)(ui_box_t* b, int x, int y);
+typedef void (*ui_hover_func_t)(ui_box_t* b, int x, int y, int down);
 typedef void (*ui_key_func_t)(void);
 
-struct ui_box_t {
-  int id;
-  int x, y;
-  int w, h;
-  int screen;
-  char *cache;
-  char *watch;
-  char last;
-  ui_draw_func_t draw;
-  ui_click_func_t onclick;
-  ui_hover_func_t onhover;
-  void *data1;
-  void *data2;
+struct ui_box_t
+{
+    int             id;
+    int             x, y;
+    int             w, h;
+    int             screen;
+    char*           cache;
+    char*           watch;
+    char            last;
+    ui_draw_func_t  draw;
+    ui_click_func_t onclick;
+    ui_hover_func_t onhover;
+    void*           data1;
+    void*           data2;
 };
 
-typedef struct ui_evt_t {
-  char *c;
-  ui_key_func_t f;
+typedef struct ui_evt_t
+{
+    char*         c;
+    ui_key_func_t f;
 } ui_evt_t;
 
 typedef vec_t(ui_box_t*) vec_box_t;
 typedef vec_t(ui_evt_t*) vec_evt_t;
 
-typedef struct ui_t {
-  struct termios tio;
-  struct winsize ws;
-  vec_box_t b;
-  vec_evt_t e;
-  ui_box_t *click;
-  int mouse, screen,
-      scroll, canscroll,
-      id, force;
+typedef struct ui_t
+{
+    struct termios tio;
+    struct winsize ws;
+    vec_box_t      b;
+    vec_evt_t      e;
+    ui_box_t*      click;
+    int            mouse, screen, scroll, canscroll, id, force;
 } ui_t;
 
 /* =========================== */
@@ -418,32 +419,33 @@ typedef struct ui_t {
  *   necessary escape codes
  *   for mouse support.
  */
-void ui_new(int s, ui_t *u){
-  struct termios raw;
+void ui_new(int s, ui_t* u)
+{
+    struct termios raw;
 
-  ioctl(STDOUT_FILENO, TIOCGWINSZ, &(u->ws));
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &(u->ws));
 
-  tcgetattr(STDIN_FILENO, &(u->tio));
-  raw = u->tio;
-  raw.c_lflag &= ~(ECHO | ICANON);
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+    tcgetattr(STDIN_FILENO, &(u->tio));
+    raw = u->tio;
+    raw.c_lflag &= ~(ECHO | ICANON);
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 
-  vec_init(&(u->b));
-  vec_init(&(u->e));
+    vec_init(&(u->b));
+    vec_init(&(u->e));
 
-  u->click = NULL;
+    u->click = NULL;
 
-  printf("\x1b[?1049h\x1b[0m\x1b[2J\x1b[?1003h\x1b[?1015h\x1b[?1006h\x1b[?25l");
+    printf("\x1b[?1049h\x1b[0m\x1b[2J\x1b[?1003h\x1b[?1015h\x1b[?1006h\x1b[?25l");
 
-  u->mouse = 0;
+    u->mouse = 0;
 
-  u->screen = s;
-  u->scroll = 0;
-  u->canscroll = 1;
-  
-  u->id = 0;
+    u->screen    = s;
+    u->scroll    = 0;
+    u->canscroll = 1;
 
-  u->force = 0;
+    u->id = 0;
+
+    u->force = 0;
 }
 
 /*
@@ -451,31 +453,35 @@ void ui_new(int s, ui_t *u){
  *   and takes the terminal
  *   out of raw mode.
  */
-void ui_free(ui_t *u){
-  ui_box_t *val;
-  ui_evt_t *evt;
-  int i;
-  char *term;
+void ui_free(ui_t* u)
+{
+    ui_box_t* val;
+    ui_evt_t* evt;
+    int       i;
+    char*     term;
 
-  printf("\x1b[0m\x1b[2J\x1b[?1049l\x1b[?1003l\x1b[?1015l\x1b[?1006l\x1b[?25h");
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &(u->tio));
+    printf("\x1b[0m\x1b[2J\x1b[?1049l\x1b[?1003l\x1b[?1015l\x1b[?1006l\x1b[?25h");
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &(u->tio));
 
-  vec_foreach(&(u->b), val, i){
-    free(val->cache);
-    free(val);
-  }
-  vec_deinit(&(u->b));
+    vec_foreach(&(u->b), val, i)
+    {
+        free(val->cache);
+        free(val);
+    }
+    vec_deinit(&(u->b));
 
-  vec_foreach(&(u->e), evt, i){
-    free(evt);
-  }
-  vec_deinit(&(u->e));
+    vec_foreach(&(u->e), evt, i)
+    {
+        free(evt);
+    }
+    vec_deinit(&(u->e));
 
-  term = getenv("TERM");
-  if(strncmp(term, "screen", 6) == 0 ||
-     strncmp(term, "tmux", 4) == 0){
-    printf("Note: Terminal multiplexer detected.\n  For best performance (i.e. reduced flickering), running natively inside\n  a GPU-accelerated terminal such as alacritty or kitty is recommended.\n");
-  }
+    term = getenv("TERM");
+    if (strncmp(term, "screen", 6) == 0 || strncmp(term, "tmux", 4) == 0)
+    {
+        printf(
+            "Note: Terminal multiplexer detected.\n  For best performance (i.e. reduced flickering), running natively inside\n  a GPU-accelerated terminal such as alacritty or kitty is recommended.\n");
+    }
 }
 
 /*
@@ -489,129 +495,130 @@ void ui_free(ui_t *u){
  * TODO: Find some way to
  *   strip this down.
  */
-int ui_add(
-  int x, int y, int w, int h, int screen,
-  char *watch, char initial,
-  ui_draw_func_t draw,
-  ui_click_func_t onclick,
-  ui_hover_func_t onhover,
-  void *data1, void *data2,
-  ui_t *u
-){
-  ui_box_t *b = (ui_box_t*)malloc(sizeof(ui_box_t));
+int ui_add(int x, int y, int w, int h, int screen, char* watch, char initial, ui_draw_func_t draw, ui_click_func_t onclick, ui_hover_func_t onhover, void* data1, void* data2, ui_t* u)
+{
+    ui_box_t* b = (ui_box_t*)malloc(sizeof(ui_box_t));
 
-  b->id = u->id++;
+    b->id = u->id++;
 
-  b->x = (x == UI_CENTER_X ? ui_center_x(w, u) : x);
-  b->y = (y == UI_CENTER_Y ? ui_center_y(h, u) : y);
-  b->w = w;
-  b->h = h;
+    b->x = (x == UI_CENTER_X ? ui_center_x(w, u) : x);
+    b->y = (y == UI_CENTER_Y ? ui_center_y(h, u) : y);
+    b->w = w;
+    b->h = h;
 
-  b->screen = screen;
+    b->screen = screen;
 
-  b->watch = watch;
-  b->last = initial;
+    b->watch = watch;
+    b->last  = initial;
 
-  b->draw = draw;
-  b->onclick = onclick;
-  b->onhover = onhover;
+    b->draw    = draw;
+    b->onclick = onclick;
+    b->onhover = onhover;
 
-  b->data1 = data1;
-  b->data2 = data2;
+    b->data1 = data1;
+    b->data2 = data2;
 
-  b->cache = (char*)malloc(MAXCACHESIZE);
-  draw(b, b->cache);
-  b->cache = (char*)realloc(b->cache, strlen(b->cache) * 2);
+    b->cache = (char*)malloc(MAXCACHESIZE);
+    draw(b, b->cache);
+    b->cache = (char*)realloc(b->cache, strlen(b->cache) * 2);
 
-  vec_push(&(u->b), b);
+    vec_push(&(u->b), b);
 
-  return b->id;
+    return b->id;
 }
 
 /*
  * Adds a new key event listener
  *   to the UI.
  */
-void ui_key(char *c, ui_key_func_t f, ui_t *u){
-  ui_evt_t *e = (ui_evt_t*)malloc(sizeof(ui_evt_t));
-  e->c = c;
-  e->f = f;
+void ui_key(char* c, ui_key_func_t f, ui_t* u)
+{
+    ui_evt_t* e = (ui_evt_t*)malloc(sizeof(ui_evt_t));
+    e->c        = c;
+    e->f        = f;
 
-  vec_push(&(u->e), e);
+    vec_push(&(u->e), e);
 }
 
 /*
  * Clears all elements from
  *   the UI.
  */
-void ui_clear(ui_t *u){
-  int tmp = u->screen;
+void ui_clear(ui_t* u)
+{
+    int tmp = u->screen;
 
-  ui_free(u);
-  ui_new(tmp, u);
+    ui_free(u);
+    ui_new(tmp, u);
 }
 
 /*
  * Draws a single box to the
  *   screen.
  */
-void ui_draw_one(ui_box_t *tmp, int flush, ui_t *u){
-  char *buf, *tok;
-  int n = -1;
+void ui_draw_one(ui_box_t* tmp, int flush, ui_t* u)
+{
+    char *buf, *tok;
+    int   n = -1;
 
-  if(tmp->screen != u->screen) return;
-  
-  buf = (char*)calloc(1, strlen(tmp->cache) * 2);
-  if(u->force ||
-     tmp->watch == NULL ||
-     *(tmp->watch) != tmp->last
-  ){
-    tmp->draw(tmp, buf);
-    if(tmp->watch != NULL) tmp->last = *(tmp->watch);
-    strcpy(tmp->cache, buf);
-  } else {
-    /* buf is allocated proportionally to tmp->cache, so strcpy is safe */
-    strcpy(buf, tmp->cache);
-  }
-  tok = strtok(buf, "\n");
-  while(tok != NULL){
-    if(tmp->x > 0 &&
-       tmp->x < u->ws.ws_col &&
-       CURSOR_Y(tmp) > 0 &&
-       CURSOR_Y(tmp) < u->ws.ws_row){
-      printf("\x1b[%i;%iH%s", CURSOR_Y(tmp), tmp->x, tok);
-      n++;
+    if (tmp->screen != u->screen)
+        return;
+
+    buf = (char*)calloc(1, strlen(tmp->cache) * 2);
+    if (u->force || tmp->watch == NULL || *(tmp->watch) != tmp->last)
+    {
+        tmp->draw(tmp, buf);
+        if (tmp->watch != NULL)
+            tmp->last = *(tmp->watch);
+        strcpy(tmp->cache, buf);
     }
-    tok = strtok(NULL, "\n");
-  }
-  free(buf);
+    else
+    {
+        /* buf is allocated proportionally to tmp->cache, so strcpy is safe */
+        strcpy(buf, tmp->cache);
+    }
+    tok = strtok(buf, "\n");
+    while (tok != NULL)
+    {
+        if (tmp->x > 0 && tmp->x < u->ws.ws_col && CURSOR_Y(tmp) > 0 && CURSOR_Y(tmp) < u->ws.ws_row)
+        {
+            printf("\x1b[%i;%iH%s", CURSOR_Y(tmp), tmp->x, tok);
+            n++;
+        }
+        tok = strtok(NULL, "\n");
+    }
+    free(buf);
 
-  if(flush) fflush(stdout);
+    if (flush)
+        fflush(stdout);
 }
 
 /*
  * Draws all boxes to the screen.
  */
-void ui_draw(ui_t *u){
-  ui_box_t *tmp;
-  int i;
+void ui_draw(ui_t* u)
+{
+    ui_box_t* tmp;
+    int       i;
 
-  printf("\x1b[0m\x1b[2J");
+    printf("\x1b[0m\x1b[2J");
 
-  vec_foreach(&(u->b), tmp, i){
-    ui_draw_one(tmp, 0, u);
-  }
-  fflush(stdout);
-  u->force = 0;
+    vec_foreach(&(u->b), tmp, i)
+    {
+        ui_draw_one(tmp, 0, u);
+    }
+    fflush(stdout);
+    u->force = 0;
 }
 
 /*
  * Forces a redraw of the screen,
  *   updating all boxes' caches.
  */
-void ui_redraw(ui_t *u){
-  u->force = 1;
-  ui_draw(u);
+void ui_redraw(ui_t* u)
+{
+    u->force = 1;
+    ui_draw(u);
 }
 
 /*
@@ -625,74 +632,63 @@ void ui_redraw(ui_t *u){
  *   variables buf and n remain
  *   opaque to the user.
  */
-void _ui_update(char *c, int n, ui_t *u){
-  ui_box_t *tmp;
-  ui_evt_t *evt;
-  int ind, x, y;
-  char cpy[n], *tok;
+void _ui_update(char* c, int n, ui_t* u)
+{
+    ui_box_t* tmp;
+    ui_evt_t* evt;
+    int       ind, x, y;
+    char      cpy[n], *tok;
 
-  if(n >= 4 &&
-     c[0] == '\x1b' &&
-     c[1] == '[' &&
-     c[2] == '<'){
-    strncpy(cpy, c, n);
-    tok = strtok(cpy+3, ";");
-    
-    switch(tok[0]){
-      case '0':
-        u->mouse = (strchr(c, 'm') == NULL);
-        COORDINATE_DECODE();
-        LOOP_AND_EXECUTE_CLICK(tmp->onclick);
-        if(!u->mouse){
-          u->click = NULL;
+    if (n >= 4 && c[0] == '\x1b' && c[1] == '[' && c[2] == '<')
+    {
+        strncpy(cpy, c, n);
+        tok = strtok(cpy + 3, ";");
+
+        switch (tok[0])
+        {
+            case '0':
+                u->mouse = (strchr(c, 'm') == NULL);
+                COORDINATE_DECODE();
+                LOOP_AND_EXECUTE_CLICK(tmp->onclick);
+                if (!u->mouse)
+                {
+                    u->click = NULL;
+                }
+                break;
+            case '3':
+                u->mouse = (strcmp(tok, "32") == 0);
+                COORDINATE_DECODE();
+                LOOP_AND_EXECUTE_HOVER(tmp->onhover);
+                break;
+            case '6':
+                if (u->canscroll)
+                {
+                    u->scroll += (4 * (tok[1] == '4')) - 2;
+                    printf("\x1b[0m\x1b[2J");
+                    ui_draw(u);
+                }
+                break;
         }
-        break;
-      case '3':
-        u->mouse = (strcmp(tok, "32") == 0);
-        COORDINATE_DECODE();
-        LOOP_AND_EXECUTE_HOVER(tmp->onhover);
-        break;
-      case '6':
-        if(u->canscroll){
-          u->scroll += (4 * (tok[1] == '4')) - 2;
-          printf("\x1b[0m\x1b[2J");
-          ui_draw(u);
-        }
-        break;
     }
-  }
 
-  vec_foreach(&(u->e), evt, ind){
-    if(strncmp(c, evt->c, strlen(evt->c)) == 0) evt->f();
-  }
+    vec_foreach(&(u->e), evt, ind)
+    {
+        if (strncmp(c, evt->c, strlen(evt->c)) == 0)
+            evt->f();
+    }
 }
 
 /*
  * HELPERS
  */
-void _ui_text(ui_box_t *b, char *out){
-  sprintf(out, "%s", (char*)b->data1);
+void _ui_text(ui_box_t* b, char* out)
+{
+    sprintf(out, "%s", (char*)b->data1);
 }
 
-int ui_text(
-  int x, int y, char *str,
-  int screen,
-  ui_click_func_t click,
-  ui_hover_func_t hover,
-  ui_t *u
-){
-  return ui_add(
-    x, y,
-    strlen(str), 1,
-    screen,
-    NULL, 0,
-    _ui_text,
-    click,
-    hover,
-    str,
-    NULL,
-    u
-  );
+int ui_text(int x, int y, char* str, int screen, ui_click_func_t click, ui_hover_func_t hover, ui_t* u)
+{
+    return ui_add(x, y, strlen(str), 1, screen, NULL, 0, _ui_text, click, hover, str, NULL, u);
 }
 
 #endif
