@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.23)
 project(tuibox LANGUAGES C)
 
 option(TUIBOX_EXAMPLES "Build tuibox example programs" ON)
+option(TUIBOX_TEST "Build tuibox test program" ON)
 
 add_library(tuibox INTERFACE)
 add_library(tuibox::tuibox ALIAS tuibox)
@@ -23,4 +24,8 @@ target_sources(tuibox
 
 if(TUIBOX_EXAMPLES)
     add_subdirectory(examples)
+endif()
+
+if(TUIBOX_TEST)
+    add_subdirectory(test)
 endif()
