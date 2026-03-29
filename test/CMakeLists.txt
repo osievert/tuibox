@@ -1,9 +1,8 @@
 set(TARGET tuibox_test)
 
 set(${TARGET}_SOURCES
-    common.c
+    all_suites.c
     main.c
-    suite_core.c
     )
    
 set(${TARGET}_HEADERS

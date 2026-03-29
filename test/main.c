@@ -2,7 +2,10 @@
 
 #include "greatest.h"
 
-extern SUITE(suite_core);
+extern SUITE(suite_boxes);
+extern SUITE(suite_events);
+extern SUITE(suite_lifecycle);
+extern SUITE(suite_render);
 
 GREATEST_MAIN_DEFS();
 #ifdef OS_IOS
@@ -13,7 +16,10 @@ int main(int argc, char* argv[])
 {
     GREATEST_MAIN_BEGIN();
 
-    RUN_SUITE(suite_core);
+    RUN_SUITE(suite_boxes);
+    RUN_SUITE(suite_events);
+    RUN_SUITE(suite_lifecycle);
+    RUN_SUITE(suite_render);
 
     GREATEST_MAIN_END();
 }

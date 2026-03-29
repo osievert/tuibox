@@ -1,3 +1,4 @@
+.vscode/
 examples/tuibox_*
 !examples/tuibox_*.c
 AGENTS.md
