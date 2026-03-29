@@ -11,7 +11,6 @@ ui_t u;
 
 void draw(ui_box_t *b, char *out){
   int x, y;
-  char tmp[256];
 
   sprintf(out, "\x1b[48;2;255;255;255m");
   for(y=0;y<b->h;y++){
@@ -22,12 +21,13 @@ void draw(ui_box_t *b, char *out){
   }
 }
 
-void stop(){
+void stop(int sig){
+  (void)sig;
   ui_free(&u);
   exit(0);
 }
 
-int main(){
+int main(void){
   char watch = 0;
   int id;
   ui_box_t *b;

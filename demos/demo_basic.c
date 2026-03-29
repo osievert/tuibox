@@ -33,22 +33,27 @@ void draw(ui_box_t *b, char *out){
 
 /* Function that runs on box click */
 void click(ui_box_t *b, int x, int y){
+  (void)x;
+  (void)y;
   b->data1 = "\x1b[0m                \n  you clicked me!  \n                ",
   ui_draw_one(b, 1, &u);
 }
 
 /* Function that runs on box hover */
 void hover(ui_box_t *b, int x, int y, int down){
+  (void)x;
+  (void)y;
+  (void)down;
   b->data1 = "\x1b[0m                \n  you hovered me!  \n                ",
   ui_draw_one(b, 1, &u);
 }
 
-void stop(){
+void stop(void){
   ui_free(&u);
   exit(0);
 }
 
-int main(){
+int main(void){
   /* Initialize UI data structures */
   ui_new(0, &u);
 

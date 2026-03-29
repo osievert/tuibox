@@ -200,7 +200,7 @@ int vec_expand_(char **data, int *length, int *capacity, int memsz) {
     int n = (*capacity == 0) ? 1 : *capacity << 1;
     ptr = realloc(*data, n * memsz);
     if (ptr == NULL) return -1;
-    *data = ptr;
+    *data = (char*)ptr;
     *capacity = n;
   }
   return 0;
@@ -212,7 +212,7 @@ int vec_reserve_(char **data, int *length, int *capacity, int memsz, int n) {
   if (n > *capacity) {
     void *ptr = realloc(*data, n * memsz);
     if (ptr == NULL) return -1;
-    *data = ptr;
+    *data = (char*)ptr;
     *capacity = n;
   }
   return 0;
@@ -241,7 +241,7 @@ int vec_compact_(char **data, int *length, int *capacity, int memsz) {
     ptr = realloc(*data, n * memsz);
     if (ptr == NULL) return -1;
     *capacity = n;
-    *data = ptr;
+    *data = (char*)ptr;
   }
   return 0;
 }
@@ -339,17 +339,27 @@ void vec_swap_(char **data, int *length, int *capacity, int memsz,
 #define HOVER_COMPARATOR(x, y, tmp) \
   (box_contains(x, y, tmp))
 
-#define LOOP_AND_EXECUTE(f, c) \
+#define LOOP_AND_EXECUTE_CLICK(f) \
   do { \
     vec_foreach(&(u->b), tmp, ind){ \
       if(tmp->screen == u->screen && \
          f != NULL && \
-         (c ? CLICK_COMPARATOR(x, y, tmp) : HOVER_COMPARATOR(x, y, tmp)) \
+         CLICK_COMPARATOR(x, y, tmp) \
+      ){ \
+        f(tmp, x, y); \
+        u->click = tmp; \
+      } \
+    } \
+  } while(0)
+
+#define LOOP_AND_EXECUTE_HOVER(f) \
+  do { \
+    vec_foreach(&(u->b), tmp, ind){ \
+      if(tmp->screen == u->screen && \
+         f != NULL && \
+         HOVER_COMPARATOR(x, y, tmp) \
       ){ \
         f(tmp, x, y, u->mouse); \
-        if(c){ \
-          u->click = tmp; \
-        } \
       } \
     } \
   } while(0)
@@ -357,9 +367,15 @@ void vec_swap_(char **data, int *length, int *capacity, int memsz,
 /*
  * TYPES
  */
-typedef void (*func)();
 
-typedef struct ui_box_t {
+typedef struct ui_box_t ui_box_t;
+
+typedef void (*ui_draw_func_t)(ui_box_t *b, char *out);
+typedef void (*ui_click_func_t)(ui_box_t *b, int x, int y);
+typedef void (*ui_hover_func_t)(ui_box_t *b, int x, int y, int down);
+typedef void (*ui_key_func_t)(void);
+
+struct ui_box_t {
   int id;
   int x, y;
   int w, h;
@@ -367,16 +383,16 @@ typedef struct ui_box_t {
   char *cache;
   char *watch;
   char last;
-  func draw;
-  func onclick;
-  func onhover;
+  ui_draw_func_t draw;
+  ui_click_func_t onclick;
+  ui_hover_func_t onhover;
   void *data1;
   void *data2;
-} ui_box_t;
+};
 
 typedef struct ui_evt_t {
   char *c;
-  func f;
+  ui_key_func_t f;
 } ui_evt_t;
 
 typedef vec_t(ui_box_t*) vec_box_t;
@@ -476,11 +492,13 @@ void ui_free(ui_t *u){
 int ui_add(
   int x, int y, int w, int h, int screen,
   char *watch, char initial,
-  func draw, func onclick, func onhover,
+  ui_draw_func_t draw,
+  ui_click_func_t onclick,
+  ui_hover_func_t onhover,
   void *data1, void *data2,
   ui_t *u
 ){
-  ui_box_t *b = malloc(sizeof(ui_box_t));
+  ui_box_t *b = (ui_box_t*)malloc(sizeof(ui_box_t));
 
   b->id = u->id++;
 
@@ -489,7 +507,7 @@ int ui_add(
   b->w = w;
   b->h = h;
 
-  b->screen = u->screen;
+  b->screen = screen;
 
   b->watch = watch;
   b->last = initial;
@@ -501,9 +519,9 @@ int ui_add(
   b->data1 = data1;
   b->data2 = data2;
 
-  b->cache = malloc(MAXCACHESIZE);
+  b->cache = (char*)malloc(MAXCACHESIZE);
   draw(b, b->cache);
-  b->cache = realloc(b->cache, strlen(b->cache) * 2);
+  b->cache = (char*)realloc(b->cache, strlen(b->cache) * 2);
 
   vec_push(&(u->b), b);
 
@@ -514,8 +532,8 @@ int ui_add(
  * Adds a new key event listener
  *   to the UI.
  */
-void ui_key(char *c, func f, ui_t *u){
-  ui_evt_t *e = malloc(sizeof(ui_evt_t));
+void ui_key(char *c, ui_key_func_t f, ui_t *u){
+  ui_evt_t *e = (ui_evt_t*)malloc(sizeof(ui_evt_t));
   e->c = c;
   e->f = f;
 
@@ -543,7 +561,7 @@ void ui_draw_one(ui_box_t *tmp, int flush, ui_t *u){
 
   if(tmp->screen != u->screen) return;
   
-  buf = calloc(1, strlen(tmp->cache) * 2);
+  buf = (char*)calloc(1, strlen(tmp->cache) * 2);
   if(u->force ||
      tmp->watch == NULL ||
      *(tmp->watch) != tmp->last
@@ -624,7 +642,7 @@ void _ui_update(char *c, int n, ui_t *u){
       case '0':
         u->mouse = (strchr(c, 'm') == NULL);
         COORDINATE_DECODE();
-        LOOP_AND_EXECUTE(tmp->onclick, 1);
+        LOOP_AND_EXECUTE_CLICK(tmp->onclick);
         if(!u->mouse){
           u->click = NULL;
         }
@@ -632,7 +650,7 @@ void _ui_update(char *c, int n, ui_t *u){
       case '3':
         u->mouse = (strcmp(tok, "32") == 0);
         COORDINATE_DECODE();
-        LOOP_AND_EXECUTE(tmp->onhover, u->mouse);
+        LOOP_AND_EXECUTE_HOVER(tmp->onhover);
         break;
       case '6':
         if(u->canscroll){
@@ -659,7 +677,8 @@ void _ui_text(ui_box_t *b, char *out){
 int ui_text(
   int x, int y, char *str,
   int screen,
-  func click, func hover,
+  ui_click_func_t click,
+  ui_hover_func_t hover,
   ui_t *u
 ){
   return ui_add(

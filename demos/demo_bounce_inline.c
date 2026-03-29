@@ -47,7 +47,7 @@ static void render_frame(const ui_box_t *box){
   frame_drawn = 1;
 }
 
-int main(){
+int main(void){
   ui_box_t box = {0};
   double vx = 0.65, vy = 0.0;
   double ax = 0.0, ay = 0.08;

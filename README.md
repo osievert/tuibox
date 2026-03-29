@@ -77,7 +77,7 @@ void hover(ui_box_t *b, int x, int y, int down){
   ui_draw(&u);
 }
 
-void stop(){
+void stop(void){
   ui_free(&u);
   exit(0);
 }

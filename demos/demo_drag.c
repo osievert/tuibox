@@ -46,12 +46,13 @@ void hover(ui_box_t *b, int x, int y, int down){
   }
 }
 
-void stop(){
+void stop(void){
   ui_free(&u);
   exit(0);
 }
 
-int main(){
+
+int main(void){
   char watch = 0;
 
   /* Initialize UI data structures */
