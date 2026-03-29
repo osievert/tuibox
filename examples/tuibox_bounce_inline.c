@@ -113,6 +113,7 @@ int main(void)
         box->y = (int)lround(py);
 
         ui_draw(&u);
+        ui_poll(&u);
         usleep(FRAME_DELAY_US);
     }
 

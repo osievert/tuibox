@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include <sys/ioctl.h>
+#include <sys/select.h>
 
 /** BEGIN vec.h **/
 
@@ -415,6 +416,7 @@ typedef struct ui_t
 } ui_t;
 
 void ui_draw(ui_t* u);
+int ui_poll(ui_t* u);
 
 /* =========================== */
 
@@ -922,6 +924,35 @@ void _ui_update(char* c, int n, ui_t* u)
         if (strncmp(c, evt->c, strlen(evt->c)) == 0)
             evt->f();
     }
+}
+
+int ui_poll(ui_t* u)
+{
+    char           buf[64];
+    fd_set         rfds;
+    struct timeval tv;
+    int            n;
+
+    FD_ZERO(&rfds);
+    FD_SET(STDIN_FILENO, &rfds);
+
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+
+    n = select(STDIN_FILENO + 1, &rfds, NULL, NULL, &tv);
+    if (n <= 0 || !FD_ISSET(STDIN_FILENO, &rfds))
+    {
+        return 0;
+    }
+
+    n = read(STDIN_FILENO, buf, sizeof(buf));
+    if (n > 0)
+    {
+        _ui_update(buf, n, u);
+        return n;
+    }
+
+    return 0;
 }
 
 /*
