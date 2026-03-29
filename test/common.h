@@ -8,7 +8,7 @@
 
 #include <sys/time.h>
 
-#include "../tuibox.h"
+#include <tuibox/tuibox.h>
 
 double elapsed(struct timeval* tv0, struct timeval* tv1, uint32_t niter, const char* test_case);
 

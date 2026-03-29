@@ -5,7 +5,7 @@
 #include <math.h>
 #include <signal.h>
 
-#include "../tuibox.h"
+#include <tuibox/tuibox.h>
 
 ui_t u;
 

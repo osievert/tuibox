@@ -6,7 +6,7 @@
 #include <signal.h>
 #include <stdio.h>
 
-#include "../tuibox.h"
+#include <tuibox/tuibox.h>
 
 #define WINDOW_HEIGHT 5
 #define WINDOW_WIDTH 20

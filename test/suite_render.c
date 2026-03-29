@@ -1,6 +1,5 @@
 #include <string.h>
 
-#include "common.h"
 #include "greatest.h"
 
 struct clipped_call_t

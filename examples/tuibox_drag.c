@@ -4,7 +4,7 @@
 
 #include <math.h>
 
-#include "../tuibox.h"
+#include <tuibox/tuibox.h>
 
 /* Global UI struct */
 ui_t u;

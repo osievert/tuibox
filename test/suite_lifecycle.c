@@ -1,6 +1,5 @@
 #include <string.h>
 
-#include "common.h"
 #include "greatest.h"
 
 struct free_call_t

@@ -1,6 +1,5 @@
 #include <string.h>
 
-#include "common.h"
 #include "greatest.h"
 
 TEST test_ui_add_centers_with_viewport_and_preserves_screen(void)

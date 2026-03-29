@@ -1,6 +1,5 @@
 #include <string.h>
 
-#include "common.h"
 #include "greatest.h"
 
 static int key_calls;
