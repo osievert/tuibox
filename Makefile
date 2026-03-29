@@ -10,4 +10,5 @@ DEBUGCFLAGS=-Og -pipe -g
 tuibox:
 	$(CC) demos/demo_basic.c -o demos/demo_basic $(LIBS) $(CFLAGS)
 	$(CC) demos/demo_bounce.c -o demos/demo_bounce $(LIBS) $(CFLAGS)
+	$(CC) demos/demo_bounce_inline.c -o demos/demo_bounce_inline $(LIBS) $(CFLAGS)
 	$(CC) demos/demo_drag.c -o demos/demo_drag $(LIBS) $(CFLAGS)
