@@ -1,4 +1,5 @@
 demo_*
 !demo_*.c
 AGENTS.md
+build/
 

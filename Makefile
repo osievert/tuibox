@@ -8,7 +8,11 @@ DEBUGCFLAGS=-Og -pipe -g
 
 .PHONY: tuibox
 tuibox:
-	$(CC) demos/demo_basic.c -o demos/demo_basic $(LIBS) $(CFLAGS)
-	$(CC) demos/demo_bounce.c -o demos/demo_bounce $(LIBS) $(CFLAGS)
-	$(CC) demos/demo_bounce_inline.c -o demos/demo_bounce_inline $(LIBS) $(CFLAGS)
-	$(CC) demos/demo_drag.c -o demos/demo_drag $(LIBS) $(CFLAGS)
+	$(CC) examples/tuibox_basic.c -o examples/tuibox_basic $(LIBS) $(CFLAGS)
+	$(CC) examples/tuibox_bounce.c -o examples/tuibox_bounce $(LIBS) $(CFLAGS)
+	$(CC) examples/tuibox_bounce_inline.c -o examples/tuibox_bounce_inline $(LIBS) $(CFLAGS)
+	$(CC) examples/tuibox_drag.c -o examples/tuibox_drag $(LIBS) $(CFLAGS)
+
+.PHONY: clean
+clean:
+	rm -f examples/tuibox_basic examples/tuibox_bounce examples/tuibox_bounce_inline examples/tuibox_drag
