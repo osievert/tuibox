@@ -1,5 +1,5 @@
-demo_*
-!demo_*.c
+examples/tuibox_*
+!examples/tuibox_*.c
 AGENTS.md
 build/
 
