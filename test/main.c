@@ -8,6 +8,7 @@ extern SUITE(suite_lifecycle);
 extern SUITE(suite_render);
 
 GREATEST_MAIN_DEFS();
+
 #ifdef OS_IOS
 int runtests(int argc, char* argv[])
 #else

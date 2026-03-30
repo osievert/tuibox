@@ -1,5 +1,8 @@
 #include <string.h>
 
+#include <tuibox/tuibox.h>
+
+#include "common.h"
 #include "greatest.h"
 
 static int key_calls;

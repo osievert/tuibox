@@ -1,13 +1,12 @@
 set(TARGET tuibox_test)
 
 set(${TARGET}_SOURCES
+    common.c
     main.c
-    suite_all.c
-    # the files below are #included into suite_all.c to avoid duplicate symbols because tuibox.h is a header-only library
-    # suite_boxes.c
-    # suite_events.c
-    # suite_lifecycle.c
-    # suite_render.c
+    suite_boxes.c
+    suite_events.c
+    suite_lifecycle.c
+    suite_render.c
     )
    
 set(${TARGET}_HEADERS

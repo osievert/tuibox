@@ -32,8 +32,6 @@ void draw_literal(ui_box_t* b, char* out)
 void init_test_ui(ui_t* u)
 {
     memset(u, 0, sizeof(*u));
-    vec_init(&(u->b));
-    vec_init(&(u->e));
     u->screen     = 0;
     u->viewport_w = 80;
     u->viewport_h = 24;
@@ -48,18 +46,26 @@ void cleanup_test_ui(ui_t* u)
     ui_evt_t* evt;
     int       i;
 
-    vec_foreach(&(u->b), box, i)
+    for (i = 0; i < u->b.length; i++)
     {
+        box = u->b.data[i];
         free(box->cache);
         free(box);
     }
-    vec_deinit(&(u->b));
+    free(u->b.data);
+    u->b.data = NULL;
+    u->b.length = 0;
+    u->b.capacity = 0;
 
-    vec_foreach(&(u->e), evt, i)
+    for (i = 0; i < u->e.length; i++)
     {
+        evt = u->e.data[i];
         free(evt);
     }
-    vec_deinit(&(u->e));
+    free(u->e.data);
+    u->e.data = NULL;
+    u->e.length = 0;
+    u->e.capacity = 0;
 }
 
 int capture_stdout(char* out, size_t out_size, capture_fn_t fn, void* ctx)
