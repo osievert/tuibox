@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <sys/ioctl.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 
 #ifdef __APPLE__
@@ -32,11 +33,21 @@ void draw_literal(ui_box_t* b, char* out)
 void init_test_ui(ui_t* u)
 {
     memset(u, 0, sizeof(*u));
+    if (tcgetattr(STDIN_FILENO, &(u->tio)) != 0)
+    {
+        memset(&(u->tio), 0, sizeof(u->tio));
+        perror("tcgetattr() error");
+    }
+
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &(u->ws)) != 0)
+    {
+        u->ws.ws_col = 80;
+        u->ws.ws_row = 24;
+    }
+
     u->screen     = 0;
     u->viewport_w = 80;
     u->viewport_h = 24;
-    u->ws.ws_col  = 80;
-    u->ws.ws_row  = 24;
     u->mode       = UI_MODE_FULLSCREEN;
 }
 
@@ -115,69 +126,63 @@ int capture_with_pty(char* out, size_t out_size, capture_fn_t fn, void* ctx)
 {
     int            master_fd;
     int            slave_fd;
-    int            saved_stdin;
-    int            saved_stdout;
-    int            saved_stderr;
-    int            nread;
+    int            status;
+    int            total = 0;
+    pid_t          pid;
+    ssize_t        nread;
     struct winsize ws;
 
     memset(&ws, 0, sizeof(ws));
     ws.ws_col = 80;
     ws.ws_row = 24;
 
-    fflush(stdout);
-    fflush(stderr);
-
     if (openpty(&master_fd, &slave_fd, NULL, NULL, &ws) != 0)
         return -1;
 
-    saved_stdin  = dup(STDIN_FILENO);
-    saved_stdout = dup(STDOUT_FILENO);
-    saved_stderr = dup(STDERR_FILENO);
-    if (saved_stdin < 0 || saved_stdout < 0 || saved_stderr < 0)
+    pid = fork();
+    if (pid < 0)
     {
-        if (saved_stdin >= 0)
-            close(saved_stdin);
-        if (saved_stdout >= 0)
-            close(saved_stdout);
-        if (saved_stderr >= 0)
-            close(saved_stderr);
         close(master_fd);
         close(slave_fd);
         return -1;
     }
 
-    if (dup2(slave_fd, STDIN_FILENO) < 0 || dup2(slave_fd, STDOUT_FILENO) < 0 || dup2(slave_fd, STDERR_FILENO) < 0)
+    if (pid == 0)
     {
-        dup2(saved_stdin, STDIN_FILENO);
-        dup2(saved_stdout, STDOUT_FILENO);
-        dup2(saved_stderr, STDERR_FILENO);
-        close(saved_stdin);
-        close(saved_stdout);
-        close(saved_stderr);
+        fflush(stdout);
+        fflush(stderr);
+
         close(master_fd);
+
+        if (dup2(slave_fd, STDIN_FILENO) < 0 ||
+            dup2(slave_fd, STDOUT_FILENO) < 0 ||
+            dup2(slave_fd, STDERR_FILENO) < 0)
+        {
+            close(slave_fd);
+            _exit(127);
+        }
+
         close(slave_fd);
-        return -1;
+
+        fn(ctx);
+        fflush(stdout);
+        fflush(stderr);
+        _exit(0);
     }
 
     close(slave_fd);
 
-    fn(ctx);
-    fflush(stdout);
-    fflush(stderr);
+    while (total + 1 < (int)out_size)
+    {
+        nread = read(master_fd, out + total, out_size - 1 - total);
+        if (nread <= 0)
+            break;
+        total += (int)nread;
+    }
 
-    dup2(saved_stdin, STDIN_FILENO);
-    dup2(saved_stdout, STDOUT_FILENO);
-    dup2(saved_stderr, STDERR_FILENO);
-    close(saved_stdin);
-    close(saved_stdout);
-    close(saved_stderr);
-
-    nread = (int)read(master_fd, out, out_size - 1);
-    if (nread < 0)
-        nread = 0;
-    out[nread] = '\0';
+    out[total] = '\0';
     close(master_fd);
+    waitpid(pid, &status, 0);
 
-    return nread;
+    return total;
 }
